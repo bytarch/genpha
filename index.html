@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genpha OS</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* Scroll Behavior for smooth anchor linking */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* The wallpaper is now the body background */
+            background-image: url('https://picsum.photos/seed/mountain/1920/1080');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* --- LIQUID GLASS EFFECT --- */
+        .glass-liquid {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px) saturate(180%) contrast(120%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%) contrast(120%);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2), 
+                        inset 0 0 0 1px rgba(255,255,255,0.1); /* Inner glow */
+        }
+
+        /* Subtle Gloss/Shine Effect */
+        .glass-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-shine::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -75%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: skewX(-20deg);
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes appOpen {
+            0% { transform: scale(0.98); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .animate-app-open {
+            animation: appOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .app-icon:active {
+            transform: scale(0.9);
+            transition: transform 0.1s;
+        }
+
+        /* Site scrollbar styling */
+        .site-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .site-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .site-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        /* Link Hover Styles */
+        .footer-link {
+            transition: color 0.2s;
+        }
+        .footer-link:hover {
+            color: #4f46e5; /* Indigo-600 */
+        }
+
+        /* Status Bar Text Colors */
+        .status-text-light {
+            text-shadow: 0 1px 3px 0 rgba(0,0,0,0.5); /* Shadow for Home Screen */
+            color: rgba(255, 255, 255, 0.9);
+            transition: color 0.3s ease;
+        }
+        
+        .status-text-dark {
+            text-shadow: none; /* No shadow for White Background */
+            color: #0f172a; /* Slate-900 for contrast */
+        }
+    </style>
+</head>
+<body class="text-white select-none relative">
+
+    <!-- Wallpaper Overlay -->
+    <div class="absolute inset-0 bg-black/10 z-0 pointer-events-none"></div>
+
+    <!-- 
+      OS STATUS BAR 
+      Z-Index 100 ensures it is visible OVER everything.
+      'transparent-nav' ensures no glass/bg.
+    -->
+    <div id="status-bar" class="fixed top-0 left-0 right-0 w-full h-8 z-[100] flex justify-between items-center px-6 text-xs font-medium bg-transparent border-b-0 transition-all duration-300">
+        <div id="clock" class="status-text-light">9:41</div>
+        <div class="flex items-center gap-3">
+            <i class="ph-fill ph-cell-signal-full status-text-light"></i>
+            <i class="ph-fill ph-wifi-high status-text-light"></i>
+            <div class="flex items-center gap-1">
+                <span id="battery-text" class="text-[10px] status-text-light">100%</span>
+                <i id="battery-icon" class="ph-fill ph-battery-full text-lg status-text-light"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+      APP GRID (Home Screen)
+    -->
+    <div id="home-screen" class="relative z-10 flex-1 pt-12 pb-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center content-start overflow-y-auto no-scrollbar transition-opacity duration-300">
+        
+        <button onclick="openApp('browser')" class="app-icon flex flex-col items-center gap-2 group hover:scale-105 transition-transform duration-200">
+            <!-- Glass Icon Container -->
+            <div class="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl text-blue-500 hover:bg-white/20 transition-all glass-shine">
+                <i class="ph-fill ph-compass text-6xl drop-shadow-lg"></i>
+            </div>
+            <span class="text-sm font-medium drop-shadow-md bg-black/30 px-4 py-1 rounded-full backdrop-blur-sm border border-white/10">Safari</span>
+        </button>
+        
+    </div>
+
+    <!-- DOCK -->
+    <div id="dock" class="relative z-20 mx-auto w-full max-w-2xl mb-2 h-20 glass-liquid glass-shine rounded-3xl flex justify-center items-center px-8 gap-8 transition-transform duration-300 animate-float">
+        <button onclick="openApp('browser')" class="app-icon w-16 h-16 rounded-3xl bg-blue-600/90 hover:bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-900/40 text-white hover:scale-105 transition-transform border border-white/20">
+            <i class="ph-fill ph-globe text-4xl"></i>
+        </button>
+    </div>
+
+    <!-- HOME BAR (Bottom) -->
+    <!-- Changed Z-index to [100] so it sits on TOP of the app -->
+    <button onclick="closeApp()" class="relative z-[100] w-full h-8 flex justify-center items-center mb-2 cursor-pointer group">
+        <div class="w-40 h-1.5 bg-white/80 rounded-full group-hover:bg-white transition-colors shadow-[0_0_10px_rgba(255,255,255,0.2)]"></div>
+    </button>
+
+    <!-- 
+      FULL SCREEN APP LAYER (Safari)
+    -->
+    <div id="app-container" class="absolute inset-0 z-50 bg-white hidden flex-col pt-8">
+        
+        <!-- Full Screen Safari Window -->
+        <div id="app-browser" class="app-window hidden w-full h-full bg-white flex flex-col overflow-hidden animate-app-open relative">
+            
+            <!-- Browser UI -->
+            <div id="browser-ui" class="w-full bg-gray-100/80 backdrop-blur-xl p-2 border-b border-gray-200/80 flex gap-2 items-center shrink-0 z-40 shadow-sm">
+                <button class="text-blue-500 p-1"><i class="ph-fill ph-caret-left"></i></button>
+                <button class="text-blue-500 p-1"><i class="ph-fill ph-caret-right"></i></button>
+                <div class="flex-1 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-gray-600 flex justify-between items-center shadow-sm border border-gray-200">
+                    <span>bytarch://genpha</span>
+                    <i class="ph-fill ph-lock-key text-green-600"></i>
+                </div>
+                <!-- Added Done/Close Button inside Header -->
+                <button onclick="closeApp()" class="text-slate-900 bg-white hover:bg-slate-100 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors border border-slate-200">
+                    Done
+                </button>
+            </div>
+
+            <!-- Website Content -->
+            <div id="scroll-container" class="flex-1 site-scroll overflow-y-auto bg-slate-50 scroll-smooth">
+                <div class="max-w-5xl mx-auto px-6 py-8 pb-32 text-slate-800">
+                    
+                    <!-- Header -->
+                    <div class="flex justify-between items-center mb-12">
+                        <div class="text-3xl font-bold tracking-tight text-indigo-900 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-lg shadow-md shadow-indigo-200">
+                                <i class="ph-bold ph-brain"></i>
+                            </div>
+                            Genpha
+                        </div>
+                        <a href="https://bytarch.netlify.app/" target="_blank" class="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-1 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+                            Visit BytArch <i class="ph-bold ph-arrow-square-out"></i>
+                        </a>
+                    </div>
+
+                    <!-- Hero Section -->
+                    <div id="hero" class="text-center mb-20 relative">
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
+                        <div class="inline-block bg-indigo-100 text-indigo-700 text-sm font-bold px-4 py-1.5 rounded-full mb-6 border border-indigo-200 shadow-sm">Alpha Version</div>
+                        <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 mb-8 leading-tight">The AI Agent that Runs Tasks in Your Browser.</h1>
+                        <p class="text-xl text-slate-600 max-w-3xl mx-auto mb-10 leading-relaxed">Genpha is a simple browser extension that understands and executes commands, automating navigation and input tasks on any webpage.</p>
+                        
+                        <div class="flex flex-col sm:flex-row justify-center items-center gap-6">
+                            <a href="https://github.com/bytarch/genpha-extension/archive/refs/heads/main.zip" target="_blank" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-8 rounded-full shadow-xl shadow-slate-200 transition-all transform hover:-translate-y-1 flex items-center gap-3 w-full sm:w-auto justify-center text-lg">
+                                <i class="ph-bold ph-download-simple text-2xl"></i> Download Alpha (ZIP)
+                            </a>
+                            <a href="https://bytarch.netlify.app/" target="_blank" class="bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-bold py-4 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-3 w-full sm:w-auto justify-center text-lg">
+                                <i class="ph-bold ph-buildings text-2xl"></i> Visit BytArch
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Features Grid -->
+                    <h2 id="features" class="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 scroll-mt-8">
+                        <i class="ph-fill ph-lightning text-yellow-500 text-3xl"></i> Core Commands Genpha Masters
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-24">
+                        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg shadow-slate-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-5 text-2xl"><i class="ph-fill ph-keyboard"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-slate-900">Input Automation</h3>
+                            <p class="text-slate-500 leading-relaxed">Accurately fill forms, select options, and type dynamic text without needing complex selectors.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg shadow-slate-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-5 text-2xl"><i class="ph-fill ph-navigation-arrow"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-slate-900">Smart Navigation</h3>
+                            <p class="text-slate-500 leading-relaxed">Execute precise clicks, follow links, and navigate complex routing systems based on conversational instructions.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg shadow-slate-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-5 text-2xl"><i class="ph-fill ph-shield-check"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-slate-900">Local Execution & Privacy</h3>
+                            <p class="text-slate-500 leading-relaxed">Genpha runs entirely as an extension, meaning your data stays local and confidential.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg shadow-slate-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                            <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mb-5 text-2xl"><i class="ph-fill ph-browsers"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-slate-900">Multi-Tab Orchestration</h3>
+                            <p class="text-slate-500 leading-relaxed">Seamlessly switch between tabs, copy data from one, and input it into another as part of a single workflow.</p>
+                        </div>
+                    </div>
+
+                    <!-- Installation Guide -->
+                    <div id="install" class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 md:p-12 text-white mb-24 relative overflow-hidden shadow-2xl border border-slate-700 scroll-mt-8">
+                        <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 transform translate-x-1/2 -translate-y-1/2"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-2">
+                                <i class="ph-fill ph-warning-octagon text-yellow-400 text-2xl"></i>
+                                <h2 class="text-3xl font-bold">Manual Installation Required</h2>
+                            </div>
+                            <p class="text-slate-300 text-base mb-10 max-w-2xl leading-relaxed">
+                                Genpha is currently in <span class="text-indigo-400 font-bold">Alpha</span> and is not yet published on the Chrome Web Store. You must install it manually using Developer Mode.
+                            </p>
+
+                            <div class="space-y-6 relative">
+                                <!-- Connecting Line -->
+                                <div class="absolute left-[19px] top-8 bottom-8 w-0.5 bg-slate-700 -z-10"></div>
+
+                                <!-- Step 1 -->
+                                <div class="flex gap-6 items-start">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700 border-4 border-slate-900 flex items-center justify-center font-bold text-sm text-indigo-400">1</div>
+                                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 flex-1 hover:bg-white/10 transition-colors">
+                                        <h3 class="font-bold text-white mb-2 text-lg">Download Source Code</h3>
+                                        <p class="text-slate-400 text-sm mb-4">Click button below to automatically download the source code as a <strong>.zip</strong> file from the main branch.</p>
+                                        <a href="https://github.com/bytarch/genpha-extension/archive/refs/heads/main.zip" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-6 rounded-full transition-colors">
+                                            <i class="ph-bold ph-download-simple"></i> Download Source Code
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2 -->
+                                <div class="flex gap-6 items-start">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700 border-4 border-slate-900 flex items-center justify-center font-bold text-sm text-indigo-400">2</div>
+                                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 flex-1 hover:bg-white/10 transition-colors">
+                                        <h3 class="font-bold text-white mb-2 text-lg">Open Extensions Page</h3>
+                                        <p class="text-slate-400 text-sm">In your Chrome browser, navigate to the extensions management page by typing:</p>
+                                        <div class="mt-3 bg-black/30 border border-white/10 rounded-lg p-2 font-mono text-xs text-indigo-300 w-full md:w-2/3">chrome://extensions</div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3 -->
+                                <div class="flex gap-6 items-start">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700 border-4 border-slate-900 flex items-center justify-center font-bold text-sm text-indigo-400">3</div>
+                                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 flex-1 hover:bg-white/10 transition-colors">
+                                        <h3 class="font-bold text-white mb-2 text-lg">Enable Developer Mode</h3>
+                                        <p class="text-slate-400 text-sm">Look for the toggle switch in the top-right corner of the page labeled <strong>Developer mode</strong> and turn it <span class="text-green-400">ON</span>.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Step 4 -->
+                                <div class="flex gap-6 items-start">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700 border-4 border-slate-900 flex items-center justify-center font-bold text-sm text-indigo-400">4</div>
+                                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 flex-1 hover:bg-white/10 transition-colors">
+                                        <h3 class="font-bold text-white mb-2 text-lg">Load the Extension</h3>
+                                        <p class="text-slate-400 text-sm mb-3">You have two options:</p>
+                                        <ul class="space-y-2 text-sm text-slate-300 list-disc list-inside">
+                                            <li><strong class="text-white">Option A (Easiest):</strong> Drag and drop the downloaded <code class="bg-black/30 px-1 rounded text-indigo-300">.zip</code> file directly onto the <code class="bg-black/30 px-1 rounded text-indigo-300">chrome://extensions</code> page.</li>
+                                            <li><strong class="text-white">Option B:</strong> Click the <strong>Load unpacked</strong> button and select the unzipped folder.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div id="footer" class="border-t border-slate-200 pt-12 text-sm text-slate-500">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                            <div>
+                                <h4 class="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wider">Product</h4>
+                                <ul class="space-y-3 text-base">
+                                    <li><a href="#hero" class="text-indigo-600 hover:text-indigo-800 transition-colors font-medium cursor-pointer">Genpha Alpha</a></li>
+                                    <li><a href="#features" class="hover:text-indigo-600 transition-colors cursor-pointer">Core Commands</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wider">Company</h4>
+                                <ul class="space-y-3 text-base">
+                                    <li><a href="https://bytarch.netlify.app/" target="_blank" class="hover:text-indigo-600 transition-colors">BytArch Website</a></li>
+                                    <li><a href="https://github.com/bytarch/genpha-extension" target="_blank" class="hover:text-indigo-600 transition-colors">View on GitHub</a></li>
+                                    <li><a href="https://github.com/bytarch/" target="_blank" class="hover:text-indigo-600 transition-colors">GitHub Org</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wider">Legal</h4>
+                                <ul class="space-y-3 text-base">
+                                    <li><a href="https://bytarch.netlify.app/privacy" target="_blank" class="hover:text-indigo-600 transition-colors">Privacy Policy</a></li>
+                                    <li><a href="https://bytarch.netlify.app/terms" target="_blank" class="hover:text-indigo-600 transition-colors">Terms of Service</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="text-center pt-8 flex flex-col items-center gap-3">
+                            <p class="font-medium text-slate-700">© 2025 BytArch. All rights reserved.</p>
+                            <p class="text-sm text-slate-400">Powered by <a href="https://bytarch.netlify.app/" target="_blank" class="text-indigo-500 hover:underline font-medium">BytArch</a></p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SYSTEM LOGIC ---
+
+        // 1. Battery Logic
+        async function initBattery() {
+            const batteryText = document.getElementById('battery-text');
+            const batteryIcon = document.getElementById('battery-icon');
+            
+            let percentage = 100; // Default dummy
+
+            try {
+                if ('getBattery' in navigator) {
+                    const battery = await navigator.getBattery();
+                    percentage = Math.round(battery.level * 100);
+                    
+                    if (percentage > 80) {
+                        batteryIcon.className = "ph-fill ph-battery-full text-lg";
+                    } else if (percentage > 20) {
+                        batteryIcon.className = "ph-fill ph-battery-medium text-lg";
+                    } else {
+                        batteryIcon.className = "ph-fill ph-battery-low text-lg text-red-500";
+                    }
+                } else {
+                    console.log("Battery API not supported.");
+                }
+            } catch (e) {
+                console.error("Battery API failed.");
+            }
+            batteryText.textContent = percentage + '%';
+        }
+
+        // 2. Clock Logic
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            const strTime = hours + ':' + minutes;
+            document.getElementById('clock').textContent = strTime;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+        initBattery();
+
+        // 3. App Management Logic
+        const appContainer = document.getElementById('app-container');
+        const appBrowser = document.getElementById('app-browser');
+        const homeScreen = document.getElementById('home-screen');
+        const dock = document.getElementById('dock');
+        const statusElements = document.querySelectorAll('.status-text-light');
+        const statusElementsDark = document.querySelectorAll('.status-text-dark');
+
+        function openApp(appName) {
+            if(appName === 'browser') {
+                appContainer.classList.remove('hidden');
+                appContainer.classList.add('flex');
+                appBrowser.classList.remove('hidden');
+
+                homeScreen.style.opacity = '0';
+                dock.style.transform = 'translateY(150%)';
+                
+                // Switch Status Bar Text to Dark (for white background)
+                statusElements.forEach(el => {
+                    el.classList.remove('status-text-light');
+                    el.classList.add('status-text-dark');
+                });
+            }
+        }
+
+        function closeApp() {
+            appBrowser.classList.add('hidden');
+            appContainer.classList.add('hidden');
+            appContainer.classList.remove('flex');
+
+            homeScreen.style.opacity = '1';
+            dock.style.transform = 'translateY(0)';
+
+            // Switch Status Bar Text back to Light (for wallpaper)
+            statusElements.forEach(el => {
+                el.classList.add('status-text-light');
+                el.classList.remove('status-text-dark');
+            });
+        }
+    </script>
+</body>
+</html>
